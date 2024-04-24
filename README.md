@@ -15,7 +15,7 @@ The results of the comparison can be found in this pre-print  https://biorxiv.or
 
 **Using Trace Ridges**
  
-The following will act as a manual on how to use the algorithm:
+The following will act as a manual on how to use the algorithm.
 
 Firstly ensure that the images you would like to use are in the same folder as the algorithm, alternatively you can call on the directory of images in matlab as such:
 
@@ -33,15 +33,16 @@ dataIn = imread('/Users/youssefarafat/Documents/GitHub/Trace_Ridges/ImagesforAna
 
 This will open and read any .png, .tif and .jpg image.
 
-you can view dataIn as such 
+you can view dataIn as such:
 
 fig(1)
+
 imagesc(dataIn)
 
 <img width="546" alt="Screenshot 2024-04-24 at 18 43 56" src="https://github.com/youssefarafat/Trace_Ridges/assets/90700104/fb4b7206-eeda-4862-9ef0-39053c15aad3">
 
 
-Trace ridges can be run in the following way by calling the function.
+Trace ridges can be run in the following way by calling the function:
 
 [fibronectinOut,fibronectinOut2,dataOut] =  Trace_Ridges(dataIn,cannySize,distGap)
 
