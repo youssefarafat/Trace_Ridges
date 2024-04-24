@@ -4,14 +4,27 @@
 
  Trace Ridges was compared against six other algoritms: Edge detection, CT Fire, Scale Space, Twombli, U-Net and Graph based, with three filtering options: no filtering, Gaussian filtering and DnCnn which is a denoising convolutional neural network. Four images of varying characterisitcs were used for the comparison, Second Harmonic Generation (SHG) images of tumour bearing mouse mammary glands, fluorescently labelled fibronectin images, Breast Cancer Biopsy images of collagen and disease mimicking extracellular matrix (Fig 1).
 
+<img width="468" alt="Screenshot 2024-04-24 at 19 53 24" src="https://github.com/youssefarafat/Trace_Ridges/assets/90700104/7cd4e937-ec6f-495c-91a8-8ea4ba6d209f">
+
+Fig 1. Tracing dataset (a) Second Harmonic Generation Collagen (SHG). (b) Fluorescent Fibronectin (FF). (c) Breast Cancer Biopsy slide (BCB). (d) Disease Mimicking ECM (DME). (e-h) ROI of images. (i-l) Manually delineated segmentation
+(GT) of ROI. White lines are the ground truth lines.
+
+
+4 comparison metrics were used: total distance error, average distance error, maximum distance error and computational processing time.
+
+A manually delineated ground truth was drawn for every image in (Fig 1.). Distance Maps of the algorithm traces were multiplied by the GT and then the opposite, distance map from the GT was multiplied against the result of an algorithm. This produces two maps. The intensities are added up to give the number of pixels the trace was far from the ground truth (Fig 2.).
+
+<img width="515" alt="Screenshot 2024-04-24 at 19 23 45" src="https://github.com/youssefarafat/Trace_Ridges/assets/90700104/3301b871-7bc1-42db-9bfe-821e58d56e2d">
+
+Fig 2. Errors distance map, pixels further away from either direction are brighter. Trace Ridges on SHG with no filtering image was used for this illustration. Trace Ridges was used as the tracing method. (a) SHG with no filtering image. (b) Distance map of the trace result. (c) GT delineation to the distance map of the trace result. (d) Tracing results of Trace Ridges. White lines indicate pixels from GT and trace. Blue lines correspond to Trace Ridges. Red lines are from the GT. (e) Distance map of the ground truth. (f) Result of the trace to the distance map of the ground truth.
+
+Total distance error is the accumulation of all the fibres distance errors in an image. Average distance error is the average number of pixels one algorithm fibre trace was far from the actual in an image. Maximum distance error is the highest value one fibre trace was far from the actual. Computational processing time is time taken to process and trace the image in each algorithm.
+
 Trace Ridges outperformed other techniques in total and average distance error metrics and fastest time after Edge detection.
 
 The results of the comparison can be found in this pre-print  https://biorxiv.org/cgi/content/short/2024.04.15.589548v1
 
 
- 
-
-<img width="572" alt="Screenshot 2024-04-24 at 14 25 52" src="https://github.com/youssefarafat/Trace_Ridges/assets/90700104/24a92e7d-1a9e-40ce-b481-32ebb231c451">
 
 **Using Trace Ridges**
  
