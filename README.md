@@ -88,58 +88,105 @@ Yellow regions means that the pixel is further away from a fibre.
 A number of metrics are extracted:
 
 fibronectinOut.avOrientation        = mean([allFibres_P.Orientation]);
+
 fibronectinOut.stdOrientation       = std([allFibres_P.Orientation]);
+
 fibronectinOut.avMajorAxisLength    = mean([allFibres_P.MajorAxisLength]);
+
 fibronectinOut.avMinorAxisLength    = mean([allFibres_P.MinorAxisLength]);
+
 fibronectinOut.stdMajorAxisLength   = std([allFibres_P.MajorAxisLength]);
+
 fibronectinOut.stdMinorAxisLength   = std([allFibres_P.MinorAxisLength]);
+
 fibronectinOut.gapArea              = sum(distMapEdges(:)>distGap);
+
 fibronectinOut.gapAreaRel           = fibronectinOut.gapArea/rows/cols ;
+
 fibronectinOut.avMajorAxisRel       = fibronectinOut.avMajorAxisLength/rows;
+
 fibronectinOut.avMinorAxisRel       = fibronectinOut.avMinorAxisLength/rows;
+
 fibronectinOut.MinAxMajAx           = fibronectinOut.avMinorAxisLength /fibronectinOut.avMajorAxisLength ;
+
 fibronectinOut.distgaps             = double(mean(distMapEdges(distMapEdges>0)));
+
 fibronectinOut.numEdges             = numEdges;
+
 [yOrient,xOrient]                   = hist([allFibres_P.Orientation],[-90:5:90]);
+
 [maxO,maxO_l]                       = max(yOrient);
+
 yOrient2                            = circshift(yOrient,-maxO_l+18);
+
 fibronectinOut.avOrientation5        = xOrient(maxO_l);
+
 fibronectinOut.stdOrientation5       = 5*sum(yOrient2>(0.7071*maxO));
+
 fibronectinOut.largestGap            = double(max(distMapEdges(:)));
+
 fibronectinOut.meanIntensity         = mean2(dataIn(:,:,maxChan));
+
 fibronectinOut.stdIntensity          = std2(dataIn(:,:,maxChan));
+
 fibronectinOut.numRegions           = numRegions;
+
 fibronectinOut.areaFibres           = sum(allFibres_L(:)>0)/rows/cols; 
+
 fibronectinOut.avgCircularity       = mean([allFibres_P.Circularity]);
+
 fibronectinOut.stdCircularity       = std([allFibres_P.Circularity]);
+
 fibronectinOut.avgCurvature         = mean(curvature);
+
 fibronectinOut.stdCurvature         = std(curvature);
+
 fibronectinOut.avgEccentricity      = mean([allFibres_P.Eccentricity]);
+
 fibronectinOut.stdEccentricity      = std([allFibres_P.Eccentricity]);
+
 fibronectinOut.avgCurvature_P         = mean(curvature_P);
+
 fibronectinOut.stdCurvature_P         = std(curvature_P);
+
 fibronectinOut.avgCurvature_P2         = mean(curvature_P2);
+
 fibronectinOut.stdCurvature_P2         = std(curvature_P2);
+
 fibronectinOut.avgAspectRatio       = mean(AspectRatio);
+
 fibronectinOut.stdAspectRatio       = std(AspectRatio);
 
 **Multiple image processing**
 
 If you would like to run more than one image at the same time you can specify the directory off images as follows 
+
 baseDir1              = '/Users/amrarafat/Documents/GitHub/Trace_Ridges/ImagesforAnalysis';
+
 dir0                = dir(strcat(baseDir1,filesep,'.png'));
+
 numFiles            = numel(dir0);
 
 then run a for loop 
+
 figure
+
 for k =1:numFiles
+
     h(k) = subplot(2,5,k);
+    
     dataIn = imread(strcat(baseDir1,filesep,dir0(k).name))
+    
     [fibronectinOut,fibronectinOut2,dataOut]=  Trace_Ridges(dataIn);
+    
  results(k) = fibronectinOut.gapArea  ;
+ 
  imagesc(fibronectinOut2.dist)
- ylabel(dir0(k).name,'interpreter','none')    
+ 
+ ylabel(dir0(k).name,'interpreter','none')   
+ 
  colormap hot  
+ 
  end
 
 This will store the values (results) which can be used to run statistical comparisons if comparing two populations of images.
