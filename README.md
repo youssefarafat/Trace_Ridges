@@ -56,7 +56,7 @@ imagesc(dataIn)
 <img width="546" alt="Screenshot 2024-04-24 at 18 43 56" src="https://github.com/youssefarafat/Trace_Ridges/assets/90700104/fb4b7206-eeda-4862-9ef0-39053c15aad3">
 
 
-Trace ridges can be run in the following way by calling the function:
+Trace Ridges can be run in the following way by calling the function:
 
 [fibronectinOut,fibronectinOut2,dataOut] =  Trace_Ridges(dataIn,cannySize,distGap)
 
@@ -173,7 +173,7 @@ fibronectinOut.stdAspectRatio       = std(AspectRatio);
 
 **Multiple image processing**
 
-If you would like to run more than one image at the same time you can specify the directory off images as follows 
+If you would like to run more than one image at the same time you can specify the directory of images as follows 
 
 baseDir1              = '/Users/amrarafat/Documents/GitHub/Trace_Ridges/ImagesforAnalysis';
 
