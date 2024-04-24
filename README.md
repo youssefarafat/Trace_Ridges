@@ -51,14 +51,19 @@ dataIn is the image being fed to the algorithm. The default cannySize is 2 but t
 
 A number of variables are outputed
 
+
 fibronectinOut2.edges                = allFibres_L;
+
 fibronectinOut2.dist                 = distMapEdges;
+
 fibronectinOut2.regions              = brightRegions2;
 
 The final trace of fibres in an image can be viewed in fibronectinOut2.edges
 
 fig(2)
+
 imagesc(fibronectinOut2.edges)
+
 colormap([0 0 0 ; rand(256,3)]);
 
 <img width="544" alt="Screenshot 2024-04-24 at 18 44 28" src="https://github.com/youssefarafat/Trace_Ridges/assets/90700104/6125913e-b435-4ad7-ae9e-8f27842563cb">
@@ -67,8 +72,11 @@ colormap([0 0 0 ; rand(256,3)]);
 Colours are assigned randomly to discern between different fibres.
 
 The gaps can be seen in fibronectinOut2.dist which is the distance map of the final trace.
+
 fig(3)
+
 imagesc(fibronectinOut2.dist)
+
 colormap hot
 
 <img width="544" alt="Screenshot 2024-04-24 at 18 45 33" src="https://github.com/youssefarafat/Trace_Ridges/assets/90700104/8f480109-44af-420f-8e58-80d810441b23">
