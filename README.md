@@ -1,3 +1,4 @@
+**Introduction**
  A fully automatic and fast algorithm that traces fibre-like structures to investigate the nature of such structures.
  Trace Ridges is a method that combines methods of Watershed for ridge detection, Edge detection which breaks any ridges that run from a main ridge towards the sides of the basins, separating them from the minor ones and morphological properties to delineate fibre-like structures.
 
@@ -12,6 +13,7 @@ The results of the comparison can be found in this pre-print  https://biorxiv.or
 
 <img width="572" alt="Screenshot 2024-04-24 at 14 25 52" src="https://github.com/youssefarafat/Trace_Ridges/assets/90700104/24a92e7d-1a9e-40ce-b481-32ebb231c451">
 
+**Using Trace Ridges**
  
 The following will act as a manual on how to use the algorithm:
 
@@ -25,11 +27,9 @@ or open the specific image as such:
 uiopen('/Users/youssefarafat/Documents/GitHub/Trace_Ridges/ImagesforAnalysis/image1.png',1)
 
 
-
-you can load an image as such
+you can load an image as such:
 
 dataIn = imread('/Users/youssefarafat/Documents/GitHub/Trace_Ridges/ImagesforAnalysis/image1.png')
-
 
 This will open and read any .png, .tif and .jpg image.
 
@@ -75,6 +75,7 @@ colormap hot
 
 Yellow regions means that the pixel is further away from a fibre.
 
+**Metrics**
 A number of metrics are extracted:
 
 fibronectinOut.avOrientation        = mean([allFibres_P.Orientation]);
@@ -112,6 +113,8 @@ fibronectinOut.avgCurvature_P2         = mean(curvature_P2);
 fibronectinOut.stdCurvature_P2         = std(curvature_P2);
 fibronectinOut.avgAspectRatio       = mean(AspectRatio);
 fibronectinOut.stdAspectRatio       = std(AspectRatio);
+
+**Multiple image processing**
 
 If you would like to run more than one image at the same time you can specify the directory off images as follows 
 baseDir1              = '/Users/amrarafat/Documents/GitHub/Trace_Ridges/ImagesforAnalysis';
