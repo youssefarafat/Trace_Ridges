@@ -1,10 +1,6 @@
 function [fibronectinOut,fibronectinOut2,dataOut] =  Trace_Ridges(dataIn,cannySize,distGap)
 
 
-%function [allFibres,allFibres_P,dataOut] = traceRidges(dataIn,sizeFilt,cannySize)
-
-
-
 if isa(dataIn,'char')
     % input parameter is a name, read
     try
@@ -22,17 +18,28 @@ end
 if levs==1  
     dataIn_MIP                  = dataIn;
 elseif levs ==3
+    % This is an RGB image
     dataIn_MIP                  = rgb2gray(dataIn);
 else
+    % this is a multiple level image, take Maximum Intensity Projection
     [dataIn_MIP]                = max(dataIn(:,:,:),[],3);
 end
 
 %detect the background dark/bright and leave with intensity always as high
-[y,x]                           = hist(double(dataIn_MIP(:)));
+[y,x]                           = hist(double(dataIn_MIP(:)),10);
 
 if (sum(y(6:10))/sum(y(1:5)))>2
     dataIn_MIP                  = max(max(dataIn_MIP))-dataIn_MIP;
 end
+
+% Detect background once inverted
+[y,x]                           = hist(double(dataIn_MIP(:)),50);
+[y2,x2,w,p]                     = findpeaks(y);
+backgroundIntensityLev          = ceil(x(x2(1))+2);
+background                      = bwmorph(dataIn_MIP<=backgroundIntensityLev,'majority');
+
+
+
 
 %distGap                         = 1.5;
 if ~exist('distGap','var')
@@ -41,7 +48,7 @@ elseif isempty(distGap)
     distGap                     = 1.5;
 end
 
-    sizeFilt                    = 3;
+sizeFilt                    = 3;
 % if ~exist('sizeFilt','var')
 %     sizeFilt                       = 3;
 % elseif isempty(sizeFilt)
@@ -65,7 +72,6 @@ elseif isempty(distGap)
 end
 
 
-
 %dataIn_MIP                 = imfilter(dataIn_MIP,gaussF(sizeFilt,sizeFilt,1),'replicate');
 % lowpass filter
 %dataIn_MIP                 = medfilt2(dataIn_MIP,[sizeFilt sizeFilt]);
@@ -75,7 +81,10 @@ dataIn_MIP                  = imfilter(dataIn_MIP,fspecial('Gaussian',sizeFilt,1
 allWatersheds               = (watershed(dataIn_MIP))==0;
 
 % find edges that will break the watersheds
-[allEdges]                  = edge(dataIn_MIP,'canny',[],cannySize);
+allEdges                  = edge(dataIn_MIP,'canny',[],cannySize);
+
+
+
 % remove edges from the watersheds
 allRidgesNoEdges            = (allWatersheds).*(allEdges==0);
 % remove all watersheds that are far from edges (i.e. basins)
@@ -88,22 +97,25 @@ allRidgesNoEdges2           = allRidgesNoEdges.*(distMapEdges<5);
 lowLevelRidges              = 0.9*255*graythresh(dataIn_MIP);
 allRidgesNoEdges3           = allRidgesNoEdges2.*double(dataIn_MIP>(lowLevelRidges));
 
+
+% SPUR removes part of the actual ridges so it should only be removed in
+% the middle bit not in the 
 % clean small spurious ridges that are coming from the watershed
-allRidgesNoEdges4           = bwmorph(allRidgesNoEdges3,'spur',5);
+%allRidgesNoEdges4           = bwmorph(allRidgesNoEdges3,'spur',5);
+allRidgesNoEdges4           = bwskel(allRidgesNoEdges3>0,'MinBranchLength',5);
+
 
 % remove very small ridges
-allRidgesNoEdges4_L         = bwlabel(allRidgesNoEdges4);
+allRidgesNoEdges4_L         = bwlabel(allRidgesNoEdges3);
 allRidgesNoEdges4_P         = regionprops(allRidgesNoEdges4_L,'MajoraxisLength');
-%allRidgesNoEdges4_P         = regionprops(allRidgesNoEdges4_L,'EulerNumber','Area','MajoraxisLength','MinoraxisLength','Eccentricity');
 
 % fill holes and thin
 
 
-% discard anything that is smaller than 10 in major axis
-largeRidges1                = ismember(allRidgesNoEdges4_L,find([allRidgesNoEdges4_P.MajorAxisLength]>10));
+% discard anything that is smaller than 5 in major axis
+largeRidges1                = ismember(allRidgesNoEdges4_L,find([allRidgesNoEdges4_P.MajorAxisLength]>5));
 largeRidges1_L              = bwlabel(largeRidges1);
 largeRidges1_P              = regionprops(largeRidges1_L,'EulerNumber');
-%largeRidges1_P              = regionprops(largeRidges1_L,'EulerNumber','Area','MajoraxisLength','MinoraxisLength','Eccentricity');
 
 
 % fill and thin This is particularly useful with very busy images with
@@ -116,36 +128,27 @@ largeRidges2_NoHoles        = (ismember(largeRidges1_L,find([largeRidges1_P.Eule
 % find the holes and keep only the smaller ones
 largeRidges2_WithHoles      = imfill(ismember(largeRidges1_L,find([largeRidges1_P.EulerNumber]<1)),'holes');
 largeRidges2_JustHoles      = largeRidges2_WithHoles.*(1-largeRidges1);
-largeRidges2_JustHoles_L    = bwlabel(largeRidges2_JustHoles);
-largeRidges2_JustHoles_P    = regionprops(largeRidges2_JustHoles_L,'Area');
-% This calculates a threshold beyond which the holes will not be filled and
-% thinned. But it depends on sufficient number to get mean + 3 * std
-if (max(largeRidges2_JustHoles_L(:))>100)
-    largeHoleArea               = mean([largeRidges2_JustHoles_P.Area])+3*std([largeRidges2_JustHoles_P.Area]);
-else
-    largeHoleArea               = mean([largeRidges2_JustHoles_P.Area])+1*std([largeRidges2_JustHoles_P.Area]);
-end
-largeRidges2_LargeHoles     = ismember(largeRidges2_JustHoles_L,find([largeRidges2_JustHoles_P.Area]>largeHoleArea));
+largeRidges2_JustHoles2     = imerode(imclose(largeRidges2_WithHoles,ones(3)),ones(5));
+
+largeRidges3                = largeRidges1.*(1-largeRidges2_JustHoles2);
+
+largeRidges4                = bwmorph(largeRidges3+largeRidges2_NoHoles,'spur',2);
 
 
-
-largeRidges2_thin           = bwmorph(bwmorph(largeRidges2_WithHoles-largeRidges2_LargeHoles,'thin','inf'),'spur',7);
-
-largeRidges3                = largeRidges2_NoHoles + largeRidges2_thin;
-largeRidges3_L              = bwlabel(largeRidges3);
-largeRidges3_P              = regionprops(largeRidges3_L,'MajoraxisLength','MinoraxisLength');
+largeRidges4_L              = bwlabel(largeRidges4);
+largeRidges4_P              = regionprops(largeRidges4_L,'MajoraxisLength','MinoraxisLength');
 %largeRidges3_P              = regionprops(largeRidges3_L,'EulerNumber','Area','MajoraxisLength','MinoraxisLength','Eccentricity');
 
 % keep anything that is straight and long, break otherwise in junctions
-largeRidges4A               = ismember(largeRidges3_L,find( ([largeRidges3_P.MajorAxisLength]>10) & ([largeRidges3_P.MinorAxisLength]<3)  )    );
-largeRidges4B               = ismember(largeRidges3_L,find( ([largeRidges3_P.MajorAxisLength]>20) & ([largeRidges3_P.MinorAxisLength]<10)  )    );
+largeRidges4A               = ismember(largeRidges4_L,find( ([largeRidges4_P.MajorAxisLength]>10) & ([largeRidges4_P.MinorAxisLength]<3)  )    );
+largeRidges4B               = ismember(largeRidges4_L,find( ([largeRidges4_P.MajorAxisLength]>20) & ([largeRidges4_P.MinorAxisLength]<10)  )    );
 
-largeRidges4C               = ismember(largeRidges3_L,find( ([largeRidges3_P.MajorAxisLength]>20) & ([largeRidges3_P.MinorAxisLength]>=10)  )    );
+largeRidges4C               = ismember(largeRidges4_L,find( ([largeRidges4_P.MajorAxisLength]>20) & ([largeRidges4_P.MinorAxisLength]>=10)  )    );
 largeRidges4D               = bwmorph(bwmorph(largeRidges4C,'thin','inf'),'branch');
 largeRidges4E               = bwmorph(largeRidges4C-largeRidges4D,'spur',1);
 largeRidges4E_L             = bwlabel(largeRidges4E);
 largeRidges4E_P             = regionprops(largeRidges4E_L,'MajoraxisLength');
-largeRidges4F               = ismember(largeRidges4E_L,find( ([largeRidges4E_P.MajorAxisLength]>10)));
+largeRidges4F               = ismember(largeRidges4E_L,find( ([largeRidges4E_P.MajorAxisLength]>4)));
 
 
 % all fibres
@@ -153,7 +156,6 @@ largeRidges4F               = ismember(largeRidges4E_L,find( ([largeRidges4E_P.M
 allFibres1                   = (largeRidges4F+largeRidges4A+largeRidges4B)>0;
 [allFibres1_L,numEdges]      = bwlabel(allFibres1);
 allFibres1_P                 = regionprops(allFibres1_L,'Orientation','MajorAxisLength','MinorAxisLength','Centroid','EquivDiameter');
-
 
 %% Check fibres that would be missed 
 % as they are not watershed, single line that finishes in the basin, these
@@ -175,7 +177,6 @@ else
     allEdgesNotFibres6          = ismember(allEdgesNotFibres5_L,find( ([allEdgesNotFibres5_P.MajorAxisLength]>25) & ([allEdgesNotFibres5_P.MinorAxisLength]<10)  )    );
 end
 
-%imagesc(allEdgesNotFibres6+2*allFibres1+0*allEdges)
 %% Final combination of the fibres
 
 allFibres2                  = bwmorph(bwmorph(allFibres1,'thin','inf'),'branch');
@@ -202,8 +203,25 @@ allFibres4                 = ismember(allFibres3_L,find( ([allFibres3_P.MajorAxi
 
 allFibres                   = allEdgesNotFibres6+allFibres4;
 [allFibres_L,numEdges]      = bwlabel(allFibres);
-allFibres_P                 = regionprops(allFibres_L,'Orientation','MajorAxisLength','MinorAxisLength','Centroid','EquivDiameter','Area','MaxFeretProperties');
-allFibres_dist              = bwdist(allFibres_L);
+allFibres_P                 = regionprops(allFibres_L,'Orientation','MajorAxisLength','MinorAxisLength','Centroid','EquivDiameter','MaxFeretProperties','Circularity','Area','Eccentricity','Perimeter');
+
+%%
+for k = 1:numEdges
+    curvature(k) = (allFibres_P(k).MajorAxisLength)/(allFibres_P(k).Area);
+end
+%%
+for k = 1:numEdges
+    curvature_P(k) = (allFibres_P(k).MajorAxisLength)/(allFibres_P(k).Perimeter);
+end
+%%
+for k = 1:numEdges
+    curvature_P2(k) = (allFibres_P(k).MajorAxisLength)/(0.5*(allFibres_P(k).Perimeter));
+end
+%%
+for k = 1:numEdges
+    AspectRatio(k) = (allFibres_P(k).MinorAxisLength)/(allFibres_P(k).MajorAxisLength);
+end
+
 
 %%
 
@@ -228,21 +246,15 @@ fibronectinOut.avMinorAxisLength    = mean([allFibres_P.MinorAxisLength]);
 fibronectinOut.stdMajorAxisLength   = std([allFibres_P.MajorAxisLength]);
 fibronectinOut.stdMinorAxisLength   = std([allFibres_P.MinorAxisLength]);
 fibronectinOut.gapArea              = sum(distMapEdges(:)>distGap);
-fibronectinOut.gapArea_allFibres    = sum(allFibres_dist(:)>distGap);
 
 fibronectinOut.gapAreaRel           = fibronectinOut.gapArea/rows/cols ;
 fibronectinOut.avMajorAxisRel       = fibronectinOut.avMajorAxisLength/rows;
 fibronectinOut.avMinorAxisRel       = fibronectinOut.avMinorAxisLength/rows;
 fibronectinOut.MinAxMajAx           = fibronectinOut.avMinorAxisLength /fibronectinOut.avMajorAxisLength ;
-fibronectinOut.avArea               = mean([allFibres_P.Area]);
-fibronectinOut.stdArea              = std([allFibres_P.Area]);
-fibronectinOut.avMaxFeretD          = mean([allFibres_P.MaxFeretDiameter]);
-fibronectinOut.stdMaxFeretD         = std([allFibres_P.MaxFeretDiameter]);
 
 
 
 fibronectinOut.distgaps             = double(mean(distMapEdges(distMapEdges>0)));
-fibronectinOut.distgaps_allFibres   = double(mean(allFibres_dist(allFibres_dist>0)));
 
 fibronectinOut.numEdges             = numEdges;
 % fibronectinOut.avOrientation2        = mean([Fibronect_5.Orientation]);
@@ -263,7 +275,6 @@ fibronectinOut.stdOrientation5       = 5*sum(yOrient2>(0.7071*maxO));
 
 
 fibronectinOut.largestGap            = double(max(distMapEdges(:)));
-fibronectinOut.largestGap_allFibres  = double(max(allFibres_dist(:)));
 
 % add intensity metrics 
 fibronectinOut.meanIntensity         = mean2(dataIn(:,:,maxChan));
@@ -282,7 +293,6 @@ fibronectinOut.areaFibres           = sum(allFibres_L(:)>0)/rows/cols;
 fibronectinOut2.edges                = allFibres_L;
 fibronectinOut2.dist                 = distMapEdges;
 fibronectinOut2.regions              = brightRegions2;
-fibronectinOut2.allFibres_dist       = allFibres_dist; 
 
 %% Calculate the density of traces and the orientation
 
@@ -310,57 +320,16 @@ end
 fibronectinOut2.mapDensity          = mapDensity;
 fibronectinOut2.mapOrientation      = mapOrientation;
 fibronectinOut2.mapVariability      = sqrt(mapOrientation2./(1+mapDensity));
-
-
-% imagesc(mapOrientation1./(1+mapDensity))    ;colorbar
-% caxis([-90 90])
-% cHot = hot;
-% cCool = cHot(end:-1:1,end:-1:1);
-% colormap([cHot(end-100:end,:);cCool(1:100,:)])
-
-
-
-
-
-%% 
-% 
-% % discard small regions, divide in 3 to use different scales below
-% largeRidges             = ismember(allRidgesNoEdges2_L,find([allRidgesNoEdges2_P.Area]>150));
-% mediumRidges            = ismember(allRidgesNoEdges2_L,find([allRidgesNoEdges2_P.Area]>50))-largeRidges;
-% smallRidges             = ismember(allRidgesNoEdges2_L,find([allRidgesNoEdges2_P.Area]>25))-largeRidges-mediumRidges;
-% 
-% % Clean ridges from spurious lines due to the watershed
-% largeRidges2_Holes            = bwmorph(largeRidges,'spur',15);
-% mediumRidges2           = bwmorph(mediumRidges,'spur',10);
-% smallRidges2            = bwmorph(smallRidges,'spur',5);
-% 
-% % find ridges with holes
-% 
-% allRidges_1             = largeRidges2_Holes+mediumRidges2+smallRidges2;
-% allRidges_1_L           = bwlabel(allRidges_1);
-% allRidges_1_P           = regionprops(allRidges_1_L,'EulerNumber','MajoraxisLength','MinoraxisLength');
-% 
-% % fill and thin
-% ridgesHoles_Filled      = imfill(ismember(allRidges_1_L,find([allRidges_1_P.EulerNumber]<1)),'holes');
-% ridgesHoles_thin        = bwmorph(ridgesHoles_Filled,'thin','inf');
-% ridgesNoHoles           = (ismember(allRidges_1_L,find([allRidges_1_P.EulerNumber]==1)));
-% 
-% ridgesHoles_thin_L      = bwlabel(ridgesHoles_thin);
-% ridgesHoles_thin_P      = regionprops(allRidges_1_L,'area','Eccentricity','MajoraxisLength');
-% ridgesNoHoles_L         = bwlabel(ridgesNoHoles);
-% ridgesNoHoles_P         = regionprops(ridgesNoHoles_L,'area','Eccentricity','MajoraxisLength');
-% 
-% % Analyse the structure, break if there are branching points, keep straight segments,
-% % spur again, remove sections that overlap
-% 
-% 
-% allRidges_2             = ridgesHoles_thin.*(1-ridgesNoHoles)+ridgesNoHoles;
-% allRidges_2_L           = bwlabel(allRidges_2);
-% 
-% 
-% imagesc(ridgesHoles_thin*2+ridgesNoHoles)
-% 
-% imagesc((allRidges_1>0) +ridgesNoHoles)
-% 
-% 
-% %bwlabel((1-allEdges).*(allWatersheds==0).*(bwdist(allEdges)<5))
+%%
+fibronectinOut.avgCircularity       = mean([allFibres_P.Circularity]);
+fibronectinOut.stdCircularity       = std([allFibres_P.Circularity]);
+fibronectinOut.avgCurvature         = mean(curvature);
+fibronectinOut.stdCurvature         = std(curvature);
+fibronectinOut.avgEccentricity      = mean([allFibres_P.Eccentricity]);
+fibronectinOut.stdEccentricity      = std([allFibres_P.Eccentricity]);
+fibronectinOut.avgCurvature_P         = mean(curvature_P);
+fibronectinOut.stdCurvature_P         = std(curvature_P);
+fibronectinOut.avgCurvature_P2         = mean(curvature_P2);
+fibronectinOut.stdCurvature_P2         = std(curvature_P2);
+fibronectinOut.avgAspectRatio       = mean(AspectRatio);
+fibronectinOut.stdAspectRatio       = std(AspectRatio);
