@@ -74,7 +74,7 @@ end
 
 %dataIn_MIP                 = imfilter(dataIn_MIP,gaussF(sizeFilt,sizeFilt,1),'replicate');
 % lowpass filter
-%dataIn_MIP                 = medfilt2(dataIn_MIP,[sizeFilt sizeFilt]);
+
 dataIn_MIP                  = imfilter(dataIn_MIP,fspecial('Gaussian',sizeFilt,1),'replicate');
 
 % find the watershed
