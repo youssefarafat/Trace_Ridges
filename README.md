@@ -14,7 +14,8 @@ Fig 1. Tracing dataset (a) Second Harmonic Generation Collagen (SHG). (b) Fluore
 
 A manually delineated ground truth was drawn for every image in (Fig 1.). Distance Maps of the algorithm traces were multiplied by the GT and then the opposite, distance map from the GT was multiplied against the result of an algorithm. This produces two maps. The intensities are added up to give the number of pixels the trace was far from the ground truth (Fig 2.).
 
-<img width="515" alt="Screenshot 2024-04-24 at 19 23 45" src="https://github.com/youssefarafat/Trace_Ridges/assets/90700104/3301b871-7bc1-42db-9bfe-821e58d56e2d">
+<img width="497" alt="Screenshot 2024-04-24 at 19 55 30" src="https://github.com/youssefarafat/Trace_Ridges/assets/90700104/695ab922-1f29-44c5-abf6-a0fdd48f38c0">
+
 
 Fig 2. Errors distance map, pixels further away from either direction are brighter. Trace Ridges on SHG with no filtering image was used for this illustration. Trace Ridges was used as the tracing method. (a) SHG with no filtering image. (b) Distance map of the trace result. (c) GT delineation to the distance map of the trace result. (d) Tracing results of Trace Ridges. White lines indicate pixels from GT and trace. Blue lines correspond to Trace Ridges. Red lines are from the GT. (e) Distance map of the ground truth. (f) Result of the trace to the distance map of the ground truth.
 
