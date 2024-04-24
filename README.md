@@ -23,7 +23,7 @@ Total distance error is the accumulation of all the fibres distance errors in an
 
 Trace Ridges outperformed other techniques in total and average distance error metrics and fastest time after Edge detection.
 
-The results of the comparison can be found in this pre-print  https://biorxiv.org/cgi/content/short/2024.04.15.589548v1
+The results of the comparison can be found in this pre-print  **https://biorxiv.org/cgi/content/short/2024.04.15.589548v1**
 
 
 
