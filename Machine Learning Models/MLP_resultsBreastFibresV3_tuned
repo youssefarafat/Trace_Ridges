@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb  5 16:47:04 2025
 
-@author: amrarafat
 """
 
 import pandas as pd
@@ -17,7 +15,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_score, recall_score, f1_score, make_scorer
 
 # Load the Data
-df = pd.read_csv("/Users/amrarafat/Documents/MachineLearning/results_Breast_FibresV3.csv")
+df = pd.read_csv("/Documents/MachineLearning/results_Breast_FibresV3.csv")
 
 # Preparing the Data
 feature_columns = [
