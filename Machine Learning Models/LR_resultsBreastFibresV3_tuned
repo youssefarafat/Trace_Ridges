@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Feb  5 14:44:00 2025
+
+@author: amrarafat
+"""
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_score, recall_score, f1_score, make_scorer
+
+# Load the Data
+df = pd.read_csv("/Users/amrarafat/Documents/MachineLearning/results_Breast_FibresV3.csv")
+
+# Preparing the Data
+feature_columns = [
+    "numEdges","avOrientation","stdOrientation","avMajorAxisLength","avMinorAxisLength","stdMajorAxisLength",
+    "stdMinorAxisLength","gapArea","gapAreaRel","largestGap", "areaTakenFibres","avMajorAxisRel","avMinorAxisRel",
+    "MinAxMajAx","avOrientation5","stdOrientation5","meanIntensity","stdIntensity","numRegions","areaFibres",
+    "avgCircularity","stdCircularity","avgCurvature","stdCurvature","avgEccentricity","stdEccentricity",
+    "avgMeanIntensity2","stdMeanIntensity2","avgMinIntensity2","stdMinIntensity2","avgMaxIntensity2","stdMaxIntensity2"
+]
+
+X = df[feature_columns]
+y = df['Classification'].map({'Normal': 0, 'TUM': 1})
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Define the Logistic Regression model
+log_reg = LogisticRegression(max_iter=1000)
+
+# Define the parameter grid for optimization
+param_grid = {
+    'C': [0.001, 0.01, 0.1, 1, 10, 100],   # Regularization strength
+    'penalty': ['l1', 'l2', 'elasticnet', 'none'],  # Regularization type
+    'solver': ['liblinear', 'lbfgs', 'saga', 'newton-cg']  # Optimization solvers
+}
+
+# Define scoring metrics
+scoring = {
+    'accuracy': 'accuracy',
+    'precision': make_scorer(precision_score),
+    'recall': make_scorer(recall_score),
+    'f1': make_scorer(f1_score)
+}
+
+# Perform Grid Search with Multiple Scoring Metrics
+grid_search = GridSearchCV(log_reg, param_grid, cv=5, scoring=scoring, refit='accuracy', n_jobs=-1, verbose=3)
+grid_search.fit(X_train, y_train)
+
+# Print best parameters
+print("Best Parameters:", grid_search.best_params_)
+print("Best Accuracy:", grid_search.best_score_)
+
+# Print all results
+cv_results = grid_search.cv_results_
+
+print("\nDetailed Results for Each Parameter Combination:")
+for i in range(len(cv_results['params'])):
+    print(f"Params: {cv_results['params'][i]}")
+    print(f"  Accuracy: {cv_results['mean_test_accuracy'][i]:.4f}")
+    print(f"  Precision: {cv_results['mean_test_precision'][i]:.4f}")
+    print(f"  Recall: {cv_results['mean_test_recall'][i]:.4f}")
+    print(f"  F1 Score: {cv_results['mean_test_f1'][i]:.4f}")
+    print("-" * 50)
+
+# Train the best model
+best_log_reg = grid_search.best_estimator_
+y_pred = best_log_reg.predict(X_test)
+
+# Evaluate the final model
+accuracy = accuracy_score(y_test, y_pred)
+print("\nFinal Model Evaluation on Test Set:")
+print(f'Optimized Accuracy: {accuracy:.4f}')
+print(classification_report(y_test, y_pred, target_names=['Normal', 'TUM']))
+
+conf_matrix = confusion_matrix(y_test, y_pred)
+print('Confusion Matrix: LR Fibres')
+print(conf_matrix)
+
+# Step 5: Visualize Confusion Matrix
+plt.figure(figsize=(10, 7))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['Normal', 'TUM'], yticklabels=['Normal', 'TUM'])
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix: LR Fibres')
+plt.show()

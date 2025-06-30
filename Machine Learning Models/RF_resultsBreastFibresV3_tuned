@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Feb  5 10:39:25 2025
+
+@author: amrarafat
+"""
+
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_score, recall_score, f1_score, make_scorer
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+# Load the Data
+df = pd.read_csv("/Users/amrarafat/Documents/MachineLearning/results_Breast_FibresV3.csv")
+
+# Preparing the Data
+feature_columns = [
+    "numEdges","avOrientation","stdOrientation","avMajorAxisLength","avMinorAxisLength","stdMajorAxisLength",
+    "stdMinorAxisLength","gapArea","gapAreaRel","largestGap", "areaTakenFibres","avMajorAxisRel","avMinorAxisRel",
+    "MinAxMajAx","avOrientation5","stdOrientation5","meanIntensity","stdIntensity","numRegions","areaFibres",
+    "avgCircularity","stdCircularity","avgCurvature","stdCurvature","avgEccentricity","stdEccentricity",
+    "avgMeanIntensity2","stdMeanIntensity2","avgMinIntensity2","stdMinIntensity2","avgMaxIntensity2","stdMaxIntensity2"
+]
+
+X = df[feature_columns]
+y = df['Classification']
+
+# Convert the target column to binary values
+y = y.map({'Normal': 0, 'TUM': 1})
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+# Define the Random Forest classifier
+rf = RandomForestClassifier(random_state=42)
+
+# Define the parameter grid for optimization
+param_grid = {
+    'n_estimators': [50, 100, 200],        # Number of trees
+    'max_depth': [10, 20, None],           # Maximum depth of trees
+    'min_samples_split': [2, 5, 10],       # Minimum samples required to split a node
+    'min_samples_leaf': [1, 2, 4],         # Minimum samples required in a leaf node
+    'max_features': ['sqrt', 'log2']       # Number of features to consider per split
+}
+
+# Define scoring metrics
+scoring = {
+    'accuracy': 'accuracy',
+    'precision': make_scorer(precision_score),
+    'recall': make_scorer(recall_score),
+    'f1': make_scorer(f1_score)
+}
+
+# Perform Grid Search with Multiple Scoring Metrics
+grid_search = GridSearchCV(rf, param_grid, cv=5, scoring=scoring, refit='accuracy', n_jobs=-1, verbose=1)
+grid_search.fit(X_train, y_train)
+
+# Print best parameters
+print("Best Parameters:", grid_search.best_params_)
+print("Best Accuracy:", grid_search.best_score_)
+
+# Print all results
+cv_results = grid_search.cv_results_
+
+print("\nDetailed Results for Each Parameter Combination:")
+for i in range(len(cv_results['params'])):
+    print(f"Params: {cv_results['params'][i]}")
+    print(f"  Accuracy: {cv_results['mean_test_accuracy'][i]:.4f}")
+    print(f"  Precision: {cv_results['mean_test_precision'][i]:.4f}")
+    print(f"  Recall: {cv_results['mean_test_recall'][i]:.4f}")
+    print(f"  F1 Score: {cv_results['mean_test_f1'][i]:.4f}")
+    print("-" * 50)
+
+# Train the best model
+best_rf = grid_search.best_estimator_
+y_pred = best_rf.predict(X_test)
+
+# Evaluate the final model
+accuracy = accuracy_score(y_test, y_pred)
+print("\nFinal Model Evaluation on Test Set:")
+print(f'Optimized Accuracy: {accuracy:.4f}')
+print(classification_report(y_test, y_pred, target_names=['Normal', 'TUM']))
+
+conf_matrix = confusion_matrix(y_test, y_pred)
+print('Confusion Matrix: Random Forest Fibres')
+print(conf_matrix)
+
+# Step 5: Visualize Confusion Matrix
+plt.figure(figsize=(10, 7))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['Normal', 'TUM'], yticklabels=['Normal', 'TUM'])
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix: Random Forest Fibres')
+plt.show()
